@@ -1,0 +1,108 @@
+Smart File Organizer – Project Spec
+Overview
+
+This tool helps organize messy files (receipts, tickets, screenshots, PDFs, etc.) into structured folders with descriptive filenames. It should run locally on a Mac and use OCR + LLMs to analyze and rename files. The goal is to make old collections of files more searchable, categorized, and human-friendly.
+
+Core Capabilities
+
+File intake
+
+User drops arbitrary files into an "inbox" folder.
+
+Supported formats include images (JPG, PNG), PDFs, Word docs, and text files.
+
+Text extraction
+
+Images/screenshots → OCR to get text.
+
+PDFs/Word docs → parse text directly.
+
+Fallback: if text cannot be extracted, file is left unchanged.
+
+Classification & summarization
+
+Extracted text is analyzed with an LLM (Claude API key provided by user).
+
+The LLM should:
+
+Suggest a category (e.g. “Uber Receipts”, “Apple Payment Confirmations”, “Travel Tickets”).
+
+Suggest a new descriptive filename that includes vendor, type, date, and other relevant info.
+
+Organization
+
+Tool creates subfolders based on categories if they don’t exist.
+
+Files are renamed and moved into the appropriate category folder.
+
+Naming collisions are handled gracefully (append suffix if needed).
+
+Execution & reporting
+
+User runs: python organize.py <input_folder> <output_folder>
+
+After processing, a summary is shown mapping:
+
+original name → new name → category.
+
+Constraints
+
+Should run locally on macOS.
+
+Requires only a Claude (or compatible LLM) API key and standard Python dependencies.
+
+Must not overwrite original files without confirmation (default is to copy + rename copied file, not delete).
+
+Development Plan
+
+Create a plan via tickets in a tickets/ folder. The spec.yaml file has some general recommendations but adhering to the exact spec is not required. One potential breakdown:
+
+Ticket 1 – Project scaffolding
+
+Set up repo with README, requirements, and placeholder modules.
+
+Create sample folders: inbox/, organized/.
+
+Ticket 2 – File extraction layer
+
+Implement text extraction for images (OCR), PDFs, and docs.
+
+Write unit tests with sample files.
+
+Ticket 3 – LLM classification layer
+
+Implement prompt design for category + filename generation.
+
+Parse JSON response safely.
+
+Ticket 4 – File renaming and moving
+
+Create subfolders automatically.
+
+Handle naming collisions.
+
+Provide dry-run option.
+
+Ticket 5 – CLI wrapper & reporting
+
+Implement organize.py CLI entrypoint.
+
+Print a summary table after execution.
+
+Ticket 6 – Polishing
+
+Add error handling for unsupported files.
+
+Add config options (e.g. “keep originals” vs “move”).
+
+Document usage in README.
+
+Workflow
+
+Work is driven by tickets.
+
+Implement one ticket at a time.
+
+Commit frequently, push at milestones (end of each ticket).
+
+End state: a working CLI tool with clear documentation.

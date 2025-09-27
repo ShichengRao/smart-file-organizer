@@ -1,0 +1,62 @@
+name: smart-file-organizer
+description: |
+  A Python-based tool for automatically organizing messy files 
+  (receipts, tickets, screenshots, PDFs, etc.) into structured folders.
+  It extracts text via OCR and PDF parsers, classifies the file using 
+  an LLM prompt, and then generates descriptive filenames and moves 
+  the files into appropriate subfolders.
+
+environment:
+  language: python
+  python_version: "3.11"
+  dependencies:
+    - pytesseract          # OCR for images
+    - pillow               # Image support for OCR
+    - pdfminer.six         # Extract text from PDFs
+    - pypdf                # Alternative PDF parser
+    - python-docx          # Extract from Word docs
+    - openai               # LLM calls (swap to local model if needed)
+    - python-dotenv        # For API keys
+    - rich                 # Pretty CLI output
+
+tasks:
+  - name: Extract text
+    description: |
+      - If file is PDF → extract text with pdfminer
+      - If file is image (jpg, png) → OCR via pytesseract
+      - If docx → use python-docx
+      - Save raw text for classification
+
+  - name: Classify file
+    description: |
+      - Send extracted text to LLM (OpenAI or local model)
+      - Prompt: "You are a file organizer. Categorize this document (e.g. 'Uber receipt', 'Apple payment', 'Boarding pass', 'Invoice'), and propose a short filename with vendor, type, and date."
+      - Receive structured JSON: {category, new_filename}
+
+  - name: Organize & rename
+    description: |
+      - Create subfolder based on {category}
+      - Move file into that folder
+      - Apply {new_filename}, preserving extension
+
+  - name: CLI entrypoint
+    description: |
+      Command: `python organize.py <input_folder> <output_folder>`
+      - Processes all files in input folder
+      - Prints summary table with old_name → new_name → category
+
+files:
+  - organize.py:
+      description: "Main runner that ties extraction, classification, and renaming together"
+  - extractors.py:
+      description: "File type detection + text extraction logic"
+  - classifier.py:
+      description: "LLM prompt + JSON parsing for categorization/renaming"
+  - renamer.py:
+      description: "Rules for safe filenames and folder paths"
+  - requirements.txt:
+      description: "Dependencies list for pip install"
+  - .env.example:
+      description: "Template for storing API keys (e.g. OPENAI_API_KEY)"
+  - README.md:
+      description: "Usage instructions and examples"
