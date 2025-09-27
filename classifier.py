@@ -7,9 +7,9 @@ from typing import Optional, Dict, Any
 from datetime import datetime
 
 try:
-    from openai import OpenAI
+    from anthropic import Anthropic
 except ImportError:
-    OpenAI = None
+    Anthropic = None
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +18,10 @@ class FileClassifier:
     """Handles file classification using LLM."""
     
     def __init__(self, api_key: str):
-        if not OpenAI:
-            raise ImportError("OpenAI package not available. Install with: pip install openai")
+        if not Anthropic:
+            raise ImportError("Anthropic package not available. Install with: pip install anthropic")
         
-        self.client = OpenAI(api_key=api_key)
+        self.client = Anthropic(api_key=api_key)
     
     def classify_file(self, filename: str, extracted_text: str) -> Optional[Dict[str, str]]:
         """
@@ -41,21 +41,21 @@ class FileClassifier:
         prompt = self._build_prompt(filename, extracted_text)
         
         try:
-            response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "You are a file organizer assistant. Analyze documents and provide structured categorization."},
-                    {"role": "user", "content": prompt}
-                ],
+            response = self.client.messages.create(
+                model="claude-3-haiku-20240307",
+                max_tokens=200,
                 temperature=0.1,
-                max_tokens=200
+                system="You are a file organizer assistant. Analyze documents and provide structured categorization.",
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
             )
             
-            content = response.choices[0].message.content
+            content = response.content[0].text
             return self._parse_response(content)
             
         except Exception as e:
-            logger.error(f"Error calling OpenAI API: {e}")
+            logger.error(f"Error calling Claude API: {e}")
             return None
     
     def _build_prompt(self, filename: str, text: str) -> str:

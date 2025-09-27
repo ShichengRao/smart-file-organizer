@@ -6,7 +6,7 @@ A Python-based tool for automatically organizing messy files (receipts, tickets,
 
 - **Multi-format support**: Images (JPG, PNG, etc.), PDFs, Word documents, and text files
 - **OCR text extraction**: Uses Tesseract for extracting text from images
-- **AI-powered classification**: Uses OpenAI's GPT models to categorize files and suggest descriptive names
+- **AI-powered classification**: Uses Anthropic's Claude models to categorize files and suggest descriptive names
 - **Safe file handling**: Copies files by default (with option to move), handles naming collisions
 - **Rich CLI interface**: Progress bars and formatted output using Rich library
 - **Dry run mode**: Preview what would be organized without actually moving files
@@ -39,10 +39,10 @@ sudo apt-get install tesseract-ocr
 **Windows:**
 Download and install from: https://github.com/UB-Mannheim/tesseract/wiki
 
-4. Set up your OpenAI API key:
+4. Set up your Anthropic API key:
 ```bash
 cp .env.example .env
-# Edit .env and add your OpenAI API key
+# Edit .env and add your Anthropic API key
 ```
 
 ## Usage
@@ -76,7 +76,7 @@ python organize.py ./inbox ./organized --verbose
 
 - `input_folder`: Folder containing files to organize
 - `output_folder`: Destination folder for organized files
-- `--api-key`: OpenAI API key (alternatively set `OPENAI_API_KEY` environment variable)
+- `--api-key`: Anthropic API key (alternatively set `ANTHROPIC_API_KEY` environment variable)
 - `--move`: Move files instead of copying them (default is copy)
 - `--dry-run`: Show what would be done without actually organizing files
 - `--verbose`: Enable detailed logging output
@@ -89,7 +89,7 @@ python organize.py ./inbox ./organized --verbose
    - PDFs → Text extraction using pdfminer
    - Word docs → Text extraction using python-docx
    - Text files → Direct reading
-3. **AI Classification**: Sends extracted text to OpenAI GPT model for:
+3. **AI Classification**: Sends extracted text to Anthropic Claude model for:
    - Category suggestion (e.g., "Uber Receipts", "Bank Statements")
    - Descriptive filename generation (including vendor, date, type)
 4. **File Organization**: 
@@ -122,11 +122,11 @@ organized/
 
 ### Environment Variables
 
-- `OPENAI_API_KEY`: Your OpenAI API key
+- `ANTHROPIC_API_KEY`: Your Anthropic API key
 
 ### API Usage
 
-The tool uses OpenAI's GPT-3.5-turbo model by default. Each file processed requires one API call. Costs are typically minimal (a few cents per hundred files).
+The tool uses Anthropic's Claude-3-Haiku model by default. Each file processed requires one API call. Costs are typically minimal (a few cents per hundred files).
 
 ## Error Handling
 
@@ -162,7 +162,7 @@ python organize.py inbox organized --dry-run
 ### Common Issues
 
 1. **"pytesseract not found"**: Install Tesseract OCR system package
-2. **"OpenAI API key required"**: Set up your API key in `.env` file
+2. **"Anthropic API key required"**: Set up your API key in `.env` file
 3. **"No text extracted"**: File might be corrupted or unsupported format
 4. **Permission errors**: Check file/folder permissions
 
