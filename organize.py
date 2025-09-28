@@ -227,7 +227,7 @@ Examples:
     
     parser.add_argument('input_folder', type=Path, help='Input folder containing files to organize')
     parser.add_argument('output_folder', type=Path, help='Output folder for organized files')
-    parser.add_argument('--api-key', help='OpenAI API key (or set OPENAI_API_KEY env var)')
+    parser.add_argument('--api-key', help='Anthropic API key (or set ANTHROPIC_API_KEY env var)')
     parser.add_argument('--move', action='store_true', help='Move files instead of copying them')
     parser.add_argument('--dry-run', action='store_true', help='Show what would be done without actually moving files')
     parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose logging')
@@ -243,9 +243,9 @@ Examples:
         load_dotenv()
     
     # Get API key
-    api_key = args.api_key or os.getenv('OPENAI_API_KEY')
+    api_key = args.api_key or os.getenv('ANTHROPIC_API_KEY')
     if not api_key:
-        print("Error: OpenAI API key is required. Set OPENAI_API_KEY environment variable or use --api-key")
+        print("Error: Anthropic API key is required. Set ANTHROPIC_API_KEY environment variable or use --api-key")
         sys.exit(1)
     
     try:
