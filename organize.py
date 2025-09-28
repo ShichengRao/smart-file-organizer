@@ -8,6 +8,7 @@ import argparse
 import logging
 import os
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Any
 
@@ -77,17 +78,32 @@ class SmartFileOrganizer:
             ) as progress:
                 task = progress.add_task("Processing files...", total=len(files_to_process))
                 
-                for file_path in files_to_process:
-                    progress.update(task, description=f"Processing {file_path.name}")
+                for i, file_path in enumerate(files_to_process, 1):
+                    progress.update(task, description=f"Processing {i}/{len(files_to_process)} files")
                     result = self._process_single_file(file_path)
                     processed_files.append(result)
                     progress.advance(task)
+                    
+                    # Print periodic updates for large batches
+                    if i % 50 == 0 or i == len(files_to_process):
+                        successful = len([f for f in processed_files if f['success']])
+                        failed = len([f for f in processed_files if not f['success']])
+                        self._print(f"Progress: {i}/{len(files_to_process)} processed ({successful} successful, {failed} failed)")
         else:
             # Fallback without progress bar
             for i, file_path in enumerate(files_to_process, 1):
-                self._print(f"Processing {i}/{len(files_to_process)}: {file_path.name}")
                 result = self._process_single_file(file_path)
                 processed_files.append(result)
+                
+                # Print periodic updates
+                if i % 50 == 0 or i == len(files_to_process):
+                    successful = len([f for f in processed_files if f['success']])
+                    failed = len([f for f in processed_files if not f['success']])
+                    self._print(f"Progress: {i}/{len(files_to_process)} processed ({successful} successful, {failed} failed)")
+        
+        # Organize failed files into error folders
+        if not self.dry_run:
+            self._organize_failed_files(processed_files)
         
         return processed_files
     
@@ -139,7 +155,8 @@ class SmartFileOrganizer:
                     file_path, 
                     classification['category'], 
                     classification['new_filename'],
-                    self.copy_mode
+                    self.copy_mode,
+                    extracted_text
                 )
                 
                 if success:
@@ -157,6 +174,63 @@ class SmartFileOrganizer:
             logger.exception(f"Error processing {file_path}")
         
         return result
+    
+    def _organize_failed_files(self, processed_files: List[Dict[str, Any]]):
+        """Organize failed files into appropriate error folders."""
+        failed_files = [f for f in processed_files if not f['success']]
+        
+        if not failed_files:
+            return
+        
+        # Create main errors folder
+        errors_folder = self.renamer.output_base_path / "_Errors"
+        errors_folder.mkdir(exist_ok=True)
+        
+        # Categorize errors and organize files
+        error_categories = {
+            "text_extraction_failed": "Could not extract text",
+            "classification_failed": "Could not classify file content", 
+            "unsupported_format": "Unsupported file format",
+            "processing_error": "Unexpected error"
+        }
+        
+        for file_info in failed_files:
+            error_message = file_info['error_message'] or "Unknown error"
+            source_file = file_info['original_path']
+            
+            # Determine error category
+            if "extract text" in error_message.lower():
+                error_category = "text_extraction_failed"
+            elif "classify" in error_message.lower():
+                error_category = "classification_failed"
+            elif "unsupported" in error_message.lower():
+                error_category = "unsupported_format"
+            else:
+                error_category = "processing_error"
+            
+            # Create error subfolder
+            error_subfolder = errors_folder / error_category
+            error_subfolder.mkdir(exist_ok=True)
+            
+            # Copy file to error folder
+            try:
+                if self.copy_mode:
+                    import shutil
+                    target_path = error_subfolder / source_file.name
+                    # Handle naming collisions
+                    target_path = self.renamer._handle_naming_collision(target_path)
+                    shutil.copy2(source_file, target_path)
+                    
+                    # Create error info file
+                    error_info_path = target_path.with_suffix(target_path.suffix + '.error_info.txt')
+                    with open(error_info_path, 'w', encoding='utf-8') as f:
+                        f.write(f"Original file: {source_file}\n")
+                        f.write(f"Error category: {error_category}\n")
+                        f.write(f"Error message: {error_message}\n")
+                        f.write(f"Processing date: {datetime.now().isoformat()}\n")
+                        
+            except Exception as e:
+                logger.error(f"Could not organize failed file {source_file}: {e}")
     
     def _print(self, message: str):
         """Print message using rich console if available, otherwise regular print."""

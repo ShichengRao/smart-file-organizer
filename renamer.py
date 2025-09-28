@@ -18,7 +18,7 @@ class FileRenamer:
         self.output_base_path.mkdir(parents=True, exist_ok=True)
     
     def organize_file(self, source_file: Path, category: str, new_filename: str, 
-                     copy_mode: bool = True) -> Tuple[bool, Optional[Path], str]:
+                     copy_mode: bool = True, extracted_text: Optional[str] = None) -> Tuple[bool, Optional[Path], str]:
         """
         Organize a file into the appropriate category folder with new name.
         
@@ -27,6 +27,7 @@ class FileRenamer:
             category: Category folder name
             new_filename: New filename (without extension)
             copy_mode: If True, copy file; if False, move file
+            extracted_text: Optional extracted text to save alongside the file
             
         Returns:
             Tuple of (success, new_file_path, message)
@@ -52,6 +53,22 @@ class FileRenamer:
             else:
                 shutil.move(str(source_file), target_path)
                 operation = "moved"
+            
+            # Save extracted text if provided
+            if extracted_text:
+                text_filename = f"{target_path.stem}_extracted_text.txt"
+                text_path = target_path.parent / text_filename
+                text_path = self._handle_naming_collision(text_path)
+                
+                try:
+                    with open(text_path, 'w', encoding='utf-8') as f:
+                        f.write(f"Extracted text from: {source_file.name}\n")
+                        f.write(f"Organized as: {target_path.name}\n")
+                        f.write(f"Category: {category}\n")
+                        f.write("-" * 50 + "\n\n")
+                        f.write(extracted_text)
+                except Exception as e:
+                    logger.warning(f"Could not save extracted text for {target_path}: {e}")
             
             message = f"Successfully {operation} to {target_path.relative_to(self.output_base_path)}"
             return True, target_path, message

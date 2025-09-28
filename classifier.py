@@ -73,18 +73,25 @@ Document content:
 {text}
 
 Please respond with a JSON object containing:
-1. "category": A descriptive category name (e.g., "Uber Receipts", "Apple Payment Confirmations", "Travel Tickets", "Bank Statements", "Medical Records")
+1. "category": A broad, consistent category name from this list or similar: "Receipts", "Bank Statements", "Travel Documents", "Medical Records", "Insurance Documents", "Tax Documents", "Contracts", "Invoices", "Personal Finance", "Work Documents", "Legal Documents", "Utilities", "Education", "Real Estate"
 2. "new_filename": A descriptive filename including vendor/company, document type, and date if available (without file extension)
 
-Guidelines:
-- Keep category names consistent and descriptive
+Guidelines for categories:
+- Use BROAD categories to avoid fragmentation (e.g., "Receipts" not "Uber Receipts" or "Food Receipts")
+- Be consistent - similar documents should go in the same category
+- Prefer general terms over specific ones
+- If unsure, choose the closest broad category from the list above
+
+Guidelines for filenames:
 - Include dates in YYYY-MM-DD format when possible
 - Include vendor/company name when identifiable
-- Keep filenames under 100 characters
+- Keep filenames under 80 characters
 - Use underscores instead of spaces in filenames
 
-Example response:
-{{"category": "Uber Receipts", "new_filename": "uber_ride_receipt_2024-01-15_downtown"}}
+Example responses:
+{{"category": "Receipts", "new_filename": "uber_ride_receipt_2024-01-15_downtown"}}
+{{"category": "Bank Statements", "new_filename": "chase_checking_statement_2024-01"}}
+{{"category": "Travel Documents", "new_filename": "united_boarding_pass_2024-02-10_sfo_jfk"}}
 
 Response:"""
     

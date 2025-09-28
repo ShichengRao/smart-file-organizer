@@ -5,8 +5,12 @@ A Python-based tool for automatically organizing messy files (receipts, tickets,
 ## Features
 
 - **Multi-format support**: Images (JPG, PNG, etc.), PDFs, Word documents, and text files
+- **Nested folder processing**: Recursively processes all subdirectories in input folder
 - **OCR text extraction**: Uses Tesseract for extracting text from images
-- **AI-powered classification**: Uses Anthropic's Claude models to categorize files and suggest descriptive names
+- **Text preservation**: Saves extracted text alongside organized files for future reference
+- **AI-powered classification**: Uses Anthropic's Claude models with improved consistency for broad categories
+- **Smart error handling**: Failed files are organized into categorized error folders
+- **Batch processing**: Optimized progress reporting for thousands of files
 - **Safe file handling**: Copies files by default (with option to move), handles naming collisions
 - **Rich CLI interface**: Progress bars and formatted output using Rich library
 - **Dry run mode**: Preview what would be organized without actually moving files
@@ -83,20 +87,44 @@ python organize.py ./inbox ./organized --verbose
 
 ## How It Works
 
-1. **File Discovery**: Scans the input folder for supported file types
+1. **File Discovery**: Recursively scans the input folder and all subfolders for supported file types
 2. **Text Extraction**: 
-   - Images → OCR using Tesseract
+   - Images → OCR using Tesseract (saves extracted text alongside organized files)
    - PDFs → Text extraction using pdfminer
    - Word docs → Text extraction using python-docx
    - Text files → Direct reading
 3. **AI Classification**: Sends extracted text to Anthropic Claude model for:
-   - Category suggestion (e.g., "Uber Receipts", "Bank Statements")
+   - Category suggestion (e.g., "Receipts", "Bank Statements", "Travel Documents")
    - Descriptive filename generation (including vendor, date, type)
 4. **File Organization**: 
-   - Creates category subfolders
+   - Creates category subfolders in output directory
    - Renames files with descriptive names
    - Handles naming collisions safely
    - Preserves original file extensions
+   - Saves extracted text as .txt files for future reference
+   - Places failed files in organized error folders by failure type
+
+## Input Folder Structure
+
+The tool supports **nested folder structures** in the input directory. It will:
+- Recursively scan all subdirectories
+- Process all supported files regardless of folder depth
+- Flatten the structure in the output (files are organized by category, not original folder structure)
+
+Example input structure:
+```
+inbox/
+├── 2023/
+│   ├── receipts/
+│   │   └── starbucks.jpg
+│   └── documents/
+│       └── contract.pdf
+├── screenshots/
+│   └── bank_statement.png
+└── misc_files.txt
+```
+
+All files will be processed and organized by content category in the output folder.
 
 ## Supported File Types
 
@@ -107,16 +135,36 @@ python organize.py ./inbox ./organized --verbose
 
 ```
 organized/
-├── Uber Receipts/
+├── Receipts/
 │   ├── uber_ride_receipt_2024-01-15_downtown.jpg
-│   └── uber_eats_order_2024-01-20_pizza.png
+│   ├── uber_ride_receipt_2024-01-15_downtown_extracted_text.txt
+│   ├── starbucks_coffee_receipt_2024-01-20.png
+│   └── starbucks_coffee_receipt_2024-01-20_extracted_text.txt
 ├── Bank Statements/
 │   ├── chase_statement_2024-01_checking.pdf
 │   └── wells_fargo_statement_2024-01_savings.pdf
-└── Travel Tickets/
-    ├── united_boarding_pass_2024-02-10_sfo_to_nyc.pdf
-    └── amtrak_ticket_2024-02-15_nyc_to_boston.jpg
+├── Travel Documents/
+│   ├── united_boarding_pass_2024-02-10_sfo_jfk.pdf
+│   └── amtrak_ticket_2024-02-15_nyc_boston.jpg
+└── _Errors/
+    ├── text_extraction_failed/
+    │   ├── corrupted_image.jpg
+    │   └── corrupted_image.jpg.error_info.txt
+    ├── classification_failed/
+    │   ├── unclear_document.pdf
+    │   └── unclear_document.pdf.error_info.txt
+    └── unsupported_format/
+        ├── unknown_file.xyz
+        └── unknown_file.xyz.error_info.txt
 ```
+
+### Key Improvements
+
+- **Broad Categories**: Uses consistent, broad categories (e.g., "Receipts" instead of "Uber Receipts", "Food Receipts")
+- **Text Preservation**: OCR and extracted text saved as `_extracted_text.txt` files
+- **Error Organization**: Failed files organized into `_Errors/` with subcategories by error type
+- **Batch Processing**: Progress updates every 50 files for large batches (e.g., "Progress: 150/1000 processed")
+- **Nested Input Support**: Processes files from any depth in input folder structure
 
 ## Configuration
 
@@ -163,8 +211,10 @@ python organize.py inbox organized --dry-run
 
 1. **"pytesseract not found"**: Install Tesseract OCR system package
 2. **"Anthropic API key required"**: Set up your API key in `.env` file
-3. **"No text extracted"**: File might be corrupted or unsupported format
-4. **Permission errors**: Check file/folder permissions
+3. **"No text extracted"**: File might be corrupted or unsupported format - check `_Errors/text_extraction_failed/` folder
+4. **"Could not classify file content"**: API issue or unclear content - check `_Errors/classification_failed/` folder
+5. **Permission errors**: Check file/folder permissions
+6. **Too many similar categories**: The tool now uses broad categories to avoid fragmentation
 
 ### Getting Help
 
